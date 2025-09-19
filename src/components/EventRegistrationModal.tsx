@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './EventRegistrationModal.css';
+import { registerForEvent } from '../firebase/eventService';
 
 interface EventRegistrationModalProps {
   isOpen: boolean;
@@ -144,18 +145,23 @@ export default function EventRegistrationModal({
         additionalInfo: formData.additionalInfo.trim()
       };
 
-      // Simulate registration (replace with your preferred storage method)
-      console.log('Registration data:', {
+      // Register for event using Firebase
+      await registerForEvent({
         eventId,
         eventName,
         participantName: sanitizedData.participantName,
         participantEmail: sanitizedData.participantEmail,
         participantPhone: sanitizedData.participantPhone,
-        additionalInfo: sanitizedData.additionalInfo
+        additionalInfo: sanitizedData.additionalInfo,
+        status: 'pending' as const
       });
 
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      console.log('Registration successful:', {
+        eventId,
+        eventName,
+        participantName: sanitizedData.participantName,
+        participantEmail: sanitizedData.participantEmail
+      });
 
       setSuccess(true);
       

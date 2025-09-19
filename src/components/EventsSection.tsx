@@ -1,11 +1,10 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import './EventsSection.css';
 import codeCookingIcon from '../assets/code_cooking.png';
 import promptEngineeringIcon from '../assets/Prompt_Engineering.png';
 import technicalPosterIcon from '../assets/Technical_Poster.png';
-// Firebase imports removed for immediate static display
-// import { getEvents, type Event as FirebaseEvent } from '../firebase/eventService';
-// import { initializeDatabase } from '../firebase/initDatabase';
+import { getEvents, type Event as FirebaseEvent } from '../firebase/eventService';
+import { initializeDatabase } from '../firebase/initDatabase';
 
 interface EventsSectionProps {
   onRegisterClick?: (event: string) => void;
@@ -143,18 +142,32 @@ function EventsSection({ onRegisterClick }: EventsSectionProps) {
   const [error, setError] = useState<string | null>(null);
 
   const loadEvents = useCallback(async () => {
-    // Use static events immediately - no loading needed
+    // Show static events immediately
     setEvents(staticEvents);
     setLoading(false);
     setError(null);
     console.log(`Using static events for immediate display`);
+    
+    // Try to load Firebase events in background (non-blocking)
+    try {
+      await initializeDatabase();
+      const firebaseEvents = await getEvents();
+      if (firebaseEvents.length > 0) {
+        setEvents(firebaseEvents);
+        console.log(`Updated with ${firebaseEvents.length} events from Firebase`);
+      }
+    } catch (firebaseError) {
+      console.log('Firebase events not available, using static events');
+    }
   }, []);
 
   const handleRetry = () => {
     loadEvents();
   };
 
-  // No useEffect needed - events are loaded immediately
+  useEffect(() => {
+    loadEvents();
+  }, [loadEvents]);
 
   const handleRegisterClick = useCallback((eventName: string) => {
     onRegisterClick?.(eventName);
