@@ -6,6 +6,7 @@ import technicalPosterIcon from '../assets/Technical_Poster.png';
 import EventRegistrationModal from './EventRegistrationModal';
 import { eventService, Event } from '../firebase/eventService';
 import { initializeDatabase } from '../firebase/initDatabase';
+import { testFirestoreConnection, testEventResponse } from '../firebase/testConnection';
 
 interface EventsSectionProps {
   onRegisterClick?: (event: string) => void;
@@ -57,6 +58,15 @@ export default function EventsSection({ onRegisterClick }: EventsSectionProps) {
   useEffect(() => {
     const loadEvents = async () => {
       try {
+        // Test Firestore connection first
+        console.log('Testing Firestore connection...');
+        const connectionTest = await testFirestoreConnection();
+        
+        if (!connectionTest.success) {
+          console.error('Firestore connection failed:', connectionTest.error);
+          // Still try to load events, but show error
+        }
+        
         // Initialize database first
         await initializeDatabase();
         
