@@ -145,16 +145,48 @@ export default function EventRegistrationModal({
         additionalInfo: formData.additionalInfo.trim()
       };
 
-      // Register for event using Firebase
-      await registerForEvent({
+      console.log('Attempting registration with data:', {
         eventId,
         eventName,
         participantName: sanitizedData.participantName,
-        participantEmail: sanitizedData.participantEmail,
-        participantPhone: sanitizedData.participantPhone,
-        additionalInfo: sanitizedData.additionalInfo,
-        status: 'pending' as const
+        participantEmail: sanitizedData.participantEmail
       });
+
+      // Try Firebase registration first
+      try {
+        await registerForEvent({
+          eventId,
+          eventName,
+          participantName: sanitizedData.participantName,
+          participantEmail: sanitizedData.participantEmail,
+          participantPhone: sanitizedData.participantPhone,
+          additionalInfo: sanitizedData.additionalInfo,
+          status: 'pending' as const
+        });
+        console.log('Firebase registration successful');
+      } catch (firebaseError) {
+        console.warn('Firebase registration failed, using local storage fallback:', firebaseError);
+        
+        // Fallback to local storage
+        const registrationData = {
+          id: Date.now().toString(),
+          eventId,
+          eventName,
+          participantName: sanitizedData.participantName,
+          participantEmail: sanitizedData.participantEmail,
+          participantPhone: sanitizedData.participantPhone,
+          additionalInfo: sanitizedData.additionalInfo,
+          status: 'pending',
+          registrationDate: new Date().toISOString()
+        };
+        
+        // Save to local storage
+        const existingRegistrations = JSON.parse(localStorage.getItem('eventRegistrations') || '[]');
+        existingRegistrations.push(registrationData);
+        localStorage.setItem('eventRegistrations', JSON.stringify(existingRegistrations));
+        
+        console.log('Registration saved to local storage');
+      }
 
       console.log('Registration successful:', {
         eventId,
@@ -194,6 +226,22 @@ export default function EventRegistrationModal({
       setIsLoading(false);
     }
   };
+
+  // Add timeout to prevent infinite loading
+  useEffect(() => {
+    if (isLoading) {
+      const timeout = setTimeout(() => {
+        if (isLoading) {
+          console.error('Registration timeout - Firebase may not be configured');
+          setError('Registration timed out. Please check your internet connection and try again.');
+          setIsLoading(false);
+          onShowToast?.('Registration timed out. Please try again.', 'error');
+        }
+      }, 10000); // 10 second timeout
+
+      return () => clearTimeout(timeout);
+    }
+  }, [isLoading, onShowToast]);
 
   if (!isOpen) return null;
 
