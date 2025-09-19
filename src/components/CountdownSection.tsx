@@ -14,12 +14,10 @@ export default function CountdownSection() {
 
   useEffect(() => {
     const eventDate = getEventDate();
-    const registrationDeadline = getRegistrationDeadline();
 
     const timer = setInterval(() => {
       const now = new Date();
       const eventTime = eventDate.getTime();
-      const regTime = registrationDeadline.getTime();
       const nowTime = now.getTime();
 
       // Check registration status

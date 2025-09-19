@@ -44,7 +44,7 @@ const getStaticEvents = (): Omit<Event, 'id'>[] => {
 // Initialize database with events
 export const initializeDatabase = async (): Promise<void> => {
   try {
-    const eventsRef = collection(db, 'events');
+    const eventsRef = collection(db!, 'events');
     const snapshot = await getDocs(eventsRef);
     
     // Only add events if database is empty

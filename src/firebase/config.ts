@@ -1,5 +1,5 @@
-import { initializeApp } from 'firebase/app';
-import { getFirestore } from 'firebase/firestore';
+import { initializeApp, type FirebaseApp } from 'firebase/app';
+import { getFirestore, type Firestore } from 'firebase/firestore';
 
 // Firebase configuration - hardcoded for reliability
 const firebaseConfig = {
@@ -27,8 +27,8 @@ if (!isFirebaseConfigured) {
 }
 
 // Initialize Firebase
-let app;
-let db;
+let app: FirebaseApp | undefined;
+let db: Firestore | null;
 
 try {
   app = initializeApp(firebaseConfig);

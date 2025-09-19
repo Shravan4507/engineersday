@@ -43,7 +43,7 @@ export const getEvents = async (): Promise<Event[]> => {
       return [];
     }
 
-    const eventsRef = collection(db, 'events');
+    const eventsRef = collection(db!, 'events');
     const q = query(eventsRef, orderBy('name'));
     const querySnapshot = await getDocs(q);
     
@@ -80,9 +80,9 @@ export const registerForEvent = async (registrationData: Omit<EventRegistrationD
 
     console.log('🔥 Firebase: Starting registration process...');
     console.log('🔥 Firebase: Database reference:', db);
-    console.log('🔥 Firebase: Database project ID:', db._databaseId.projectId);
+    console.log('🔥 Firebase: Database project ID:', 'engineersday-2025');
     
-    const registrationsRef = collection(db, 'registrations');
+    const registrationsRef = collection(db!, 'registrations');
     console.log('🔥 Firebase: Collection reference created');
     
     const data = {
@@ -114,6 +114,11 @@ export const registerForEvent = async (registrationData: Omit<EventRegistrationD
 // Get all registrations (for admin/export purposes)
 export const getAllRegistrations = async (): Promise<EventRegistrationData[]> => {
   try {
+    if (!db) {
+      console.warn('⚠️ Firebase not configured - returning empty registrations array');
+      return [];
+    }
+    
     const registrationsRef = collection(db, 'registrations');
     const q = query(registrationsRef, orderBy('registrationDate', 'desc'));
     const querySnapshot = await getDocs(q);
