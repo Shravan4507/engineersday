@@ -3,10 +3,10 @@
 
 export const EVENT_CONFIG = {
   // Event date - when the actual event happens
-  eventDate: '2025-09-21T00:00:00Z', // September 29, 2025 UTC
+  eventDate: '2025-09-22T00:00:00Z', // September 29, 2025 UTC
   
   // Registration deadline - when registration closes
-  registrationDeadline: '2025-09-18T23:59:59Z', // September 28, 2025 UTC
+  registrationDeadline: '2025-09-20T23:59:59Z', // September 28, 2025 UTC
   
   // Event details
   eventName: "Engineers' Day 2025",
