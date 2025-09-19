@@ -146,24 +146,27 @@ function EventsSection({ onRegisterClick }: EventsSectionProps) {
       setLoading(true);
       setError(null);
       
-      // Initialize database first
-      await initializeDatabase();
+      // Use static events immediately for better user experience
+      setEvents(staticEvents);
+      setError(null);
+      console.log(`Using static events for immediate display`);
       
-      // Load events from Firebase
-      const firebaseEvents = await getEvents();
-      if (firebaseEvents.length > 0) {
-        setEvents(firebaseEvents);
-        setError(null);
-        console.log(`Loaded ${firebaseEvents.length} events from Firebase`);
-      } else {
-        // Fallback to static events
-        setEvents(staticEvents);
-        setError('No events found in database, using default events');
+      // Try to load from Firebase in background (optional)
+      try {
+        await initializeDatabase();
+        const firebaseEvents = await getEvents();
+        if (firebaseEvents.length > 0) {
+          setEvents(firebaseEvents);
+          setError(null);
+          console.log(`Updated with ${firebaseEvents.length} events from Firebase`);
+        }
+      } catch (firebaseError) {
+        console.log('Firebase events not available, using static events');
       }
     } catch (error) {
       console.error('Error loading events:', error);
       setEvents(staticEvents);
-      setError('Failed to load events from server, using offline mode');
+      setError('Using offline mode');
     } finally {
       setLoading(false);
     }
