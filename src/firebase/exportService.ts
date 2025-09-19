@@ -1,4 +1,4 @@
-import { getAllRegistrations, type EventRegistrationData } from './eventService';
+import { getAllRegistrations } from './eventService';
 
 // Convert registrations to CSV format
 export const exportRegistrationsToCSV = async (): Promise<string> => {
@@ -19,7 +19,7 @@ export const exportRegistrationsToCSV = async (): Promise<string> => {
     
     // Convert registrations to CSV rows
     const csvRows = registrations.map(reg => [
-      reg.id,
+      reg.id || 'N/A',
       reg.eventName,
       reg.participantName,
       reg.participantEmail,

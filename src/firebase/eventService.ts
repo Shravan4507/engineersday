@@ -23,6 +23,7 @@ export interface Event {
 
 // Registration data interface
 export interface EventRegistrationData {
+  id?: string; // Optional ID for when retrieved from Firestore
   eventId: string;
   eventName: string;
   participantName: string;
@@ -85,7 +86,7 @@ export const getAllRegistrations = async (): Promise<EventRegistrationData[]> =>
       registrations.push({
         id: doc.id,
         ...doc.data()
-      } as EventRegistrationData & { id: string });
+      } as EventRegistrationData);
     });
     
     return registrations;
