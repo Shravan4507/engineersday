@@ -59,18 +59,29 @@ export const getEvents = async (): Promise<Event[]> => {
 // Register for an event
 export const registerForEvent = async (registrationData: Omit<EventRegistrationData, 'registrationDate'>): Promise<void> => {
   try {
+    console.log('🔥 Firebase: Starting registration process...');
+    console.log('🔥 Firebase: Database reference:', db);
+    
     const registrationsRef = collection(db, 'registrations');
+    console.log('🔥 Firebase: Collection reference created');
     
     const data = {
       ...registrationData,
       registrationDate: Timestamp.now()
     };
+    console.log('🔥 Firebase: Data to save:', data);
     
-    await addDoc(registrationsRef, data);
-    console.log('Registration successful');
+    const docRef = await addDoc(registrationsRef, data);
+    console.log('✅ Firebase: Registration successful with ID:', docRef.id);
   } catch (error) {
-    console.error('Error registering for event:', error);
-    throw new Error('Failed to register for event');
+    console.error('❌ Firebase: Error registering for event:', error);
+    console.error('❌ Firebase: Error details:', {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      code: (error as any)?.code,
+      details: (error as any)?.details,
+      stack: error instanceof Error ? error.stack : undefined
+    });
+    throw new Error(`Failed to register for event: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 };
 

@@ -276,11 +276,20 @@ export default function RegistrationModal({
       };
 
       // Try Firebase registration first
+      console.log('Attempting Firebase registration with data:', registrationData);
       try {
         await registerForEvent(registrationData);
-        console.log('Firebase registration successful');
+        console.log('✅ Firebase registration successful');
       } catch (firebaseError) {
-        console.warn('Firebase registration failed, using local storage fallback:', firebaseError);
+        console.error('❌ Firebase registration failed:', firebaseError);
+        console.error('Error details:', {
+          message: firebaseError instanceof Error ? firebaseError.message : 'Unknown error',
+          stack: firebaseError instanceof Error ? firebaseError.stack : undefined,
+          code: (firebaseError as any)?.code,
+          details: (firebaseError as any)?.details
+        });
+        
+        console.log('🔄 Using local storage fallback...');
         
         // Fallback to local storage
         const fallbackData = {
@@ -294,7 +303,7 @@ export default function RegistrationModal({
         existingRegistrations.push(fallbackData);
         localStorage.setItem('eventRegistrations', JSON.stringify(existingRegistrations));
         
-        console.log('Registration saved to local storage');
+        console.log('✅ Registration saved to local storage');
       }
 
       setIsSubmitted(true);

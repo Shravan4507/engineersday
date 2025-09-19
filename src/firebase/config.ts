@@ -24,8 +24,18 @@ const requiredEnvVars = [
 const missingVars = requiredEnvVars.filter(varName => !import.meta.env[varName]);
 
 if (missingVars.length > 0) {
-  console.error('Missing required environment variables:', missingVars);
+  console.error('❌ Missing required environment variables:', missingVars);
   console.error('Please check your .env file and ensure all Firebase configuration variables are set.');
+} else {
+  console.log('✅ All Firebase environment variables are present');
+  console.log('Firebase config:', {
+    apiKey: import.meta.env.VITE_FIREBASE_API_KEY ? 'Present' : 'Missing',
+    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN ? 'Present' : 'Missing',
+    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID ? 'Present' : 'Missing',
+    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET ? 'Present' : 'Missing',
+    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID ? 'Present' : 'Missing',
+    appId: import.meta.env.VITE_FIREBASE_APP_ID ? 'Present' : 'Missing'
+  });
 }
 
 // Initialize Firebase
