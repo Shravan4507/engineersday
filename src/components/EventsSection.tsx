@@ -5,6 +5,7 @@ import promptEngineeringIcon from '../assets/Prompt_Engineering.png';
 import technicalPosterIcon from '../assets/Technical_Poster.png';
 import EventRegistrationModal from './EventRegistrationModal';
 import { eventService, Event } from '../firebase/eventService';
+import { initializeDatabase } from '../firebase/initDatabase';
 
 interface EventsSectionProps {
   onRegisterClick?: (event: string) => void;
@@ -56,6 +57,10 @@ export default function EventsSection({ onRegisterClick }: EventsSectionProps) {
   useEffect(() => {
     const loadEvents = async () => {
       try {
+        // Initialize database first
+        await initializeDatabase();
+        
+        // Load events from Firebase
         const firebaseEvents = await eventService.getEvents();
         if (firebaseEvents.length > 0) {
           setEvents(firebaseEvents);
