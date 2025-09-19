@@ -3,6 +3,7 @@ export { default as Navbar } from './Navbar';
 export { default as HomeSection } from './HomeSection';
 export { default as CountdownSection } from './CountdownSection';
 export { default as EventsSection } from './EventsSection';
+export { default as EventRegistrationModal } from './EventRegistrationModal';
 export { default as PrizesSection } from './PrizesSection';
 export { default as FooterSection } from './FooterSection';
 export { default as ErrorBoundary } from './ErrorBoundary';
