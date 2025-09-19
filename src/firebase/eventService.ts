@@ -2,27 +2,13 @@ import {
   collection, 
   addDoc, 
   getDocs, 
-  doc, 
-  updateDoc, 
-  deleteDoc,
-  query,
+  query, 
   orderBy,
   Timestamp 
 } from 'firebase/firestore';
 import { db } from './config';
 
-export interface EventResponse {
-  id?: string;
-  eventId: string;
-  eventName: string;
-  participantName: string;
-  participantEmail: string;
-  participantPhone: string;
-  registrationDate: Timestamp;
-  status: 'pending' | 'confirmed' | 'cancelled';
-  additionalInfo?: string;
-}
-
+// Event interface
 export interface Event {
   id: string;
   name: string;
@@ -35,112 +21,76 @@ export interface Event {
   isActive: boolean;
 }
 
-class EventService {
-  private eventsCollection = collection(db, 'events');
-  private responsesCollection = collection(db, 'eventResponses');
-
-  // Get all events
-  async getEvents(): Promise<Event[]> {
-    try {
-      const q = query(this.eventsCollection, orderBy('date', 'asc'));
-      const querySnapshot = await getDocs(q);
-      return querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as Event[];
-    } catch (error) {
-      console.error('Error getting events:', error);
-      throw error;
-    }
-  }
-
-  // Register for an event
-  async registerForEvent(eventData: Omit<EventResponse, 'id' | 'registrationDate'>): Promise<string> {
-    try {
-      const responseData = {
-        ...eventData,
-        registrationDate: Timestamp.now(),
-        status: 'pending' as const
-      };
-      
-      const docRef = await addDoc(this.responsesCollection, responseData);
-      
-      // Update event participant count
-      await this.updateEventParticipantCount(eventData.eventId, 1);
-      
-      return docRef.id;
-    } catch (error) {
-      console.error('Error registering for event:', error);
-      throw error;
-    }
-  }
-
-  // Get all responses for an event
-  async getEventResponses(eventId: string): Promise<EventResponse[]> {
-    try {
-      const q = query(
-        this.responsesCollection,
-        orderBy('registrationDate', 'desc')
-      );
-      const querySnapshot = await getDocs(q);
-      
-      return querySnapshot.docs
-        .map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }))
-        .filter(response => response.eventId === eventId) as EventResponse[];
-    } catch (error) {
-      console.error('Error getting event responses:', error);
-      throw error;
-    }
-  }
-
-  // Update response status
-  async updateResponseStatus(responseId: string, status: EventResponse['status']): Promise<void> {
-    try {
-      const responseRef = doc(this.responsesCollection, responseId);
-      await updateDoc(responseRef, { status });
-    } catch (error) {
-      console.error('Error updating response status:', error);
-      throw error;
-    }
-  }
-
-  // Update event participant count
-  private async updateEventParticipantCount(eventId: string, change: number): Promise<void> {
-    try {
-      const eventRef = doc(this.eventsCollection, eventId);
-      const eventDoc = await getDocs(query(this.eventsCollection));
-      const event = eventDoc.docs.find(doc => doc.id === eventId);
-      
-      if (event) {
-        const currentCount = event.data().currentParticipants || 0;
-        await updateDoc(eventRef, {
-          currentParticipants: currentCount + change
-        });
-      }
-    } catch (error) {
-      console.error('Error updating participant count:', error);
-      throw error;
-    }
-  }
-
-  // Check if user already registered for event
-  async checkExistingRegistration(email: string, eventId: string): Promise<boolean> {
-    try {
-      const q = query(this.responsesCollection);
-      const querySnapshot = await getDocs(q);
-      
-      return querySnapshot.docs.some(doc => {
-        const data = doc.data();
-        return data.participantEmail === email && data.eventId === eventId;
-      });
-    } catch (error) {
-      console.error('Error checking existing registration:', error);
-      throw error;
-    }
-  }
+// Registration data interface
+export interface EventRegistrationData {
+  eventId: string;
+  eventName: string;
+  participantName: string;
+  participantEmail: string;
+  participantPhone: string;
+  additionalInfo: string;
+  status: 'pending' | 'confirmed' | 'cancelled';
+  registrationDate: Timestamp;
 }
 
-export const eventService = new EventService();
+// Get all events
+export const getEvents = async (): Promise<Event[]> => {
+  try {
+    const eventsRef = collection(db, 'events');
+    const q = query(eventsRef, orderBy('name'));
+    const querySnapshot = await getDocs(q);
+    
+    const events: Event[] = [];
+    querySnapshot.forEach((doc) => {
+      events.push({
+        id: doc.id,
+        ...doc.data()
+      } as Event);
+    });
+    
+    return events;
+  } catch (error) {
+    console.error('Error getting events:', error);
+    throw new Error('Failed to fetch events');
+  }
+};
+
+// Register for an event
+export const registerForEvent = async (registrationData: Omit<EventRegistrationData, 'registrationDate'>): Promise<void> => {
+  try {
+    const registrationsRef = collection(db, 'registrations');
+    
+    const data = {
+      ...registrationData,
+      registrationDate: Timestamp.now()
+    };
+    
+    await addDoc(registrationsRef, data);
+    console.log('Registration successful');
+  } catch (error) {
+    console.error('Error registering for event:', error);
+    throw new Error('Failed to register for event');
+  }
+};
+
+// Get all registrations (for admin/export purposes)
+export const getAllRegistrations = async (): Promise<EventRegistrationData[]> => {
+  try {
+    const registrationsRef = collection(db, 'registrations');
+    const q = query(registrationsRef, orderBy('registrationDate', 'desc'));
+    const querySnapshot = await getDocs(q);
+    
+    const registrations: EventRegistrationData[] = [];
+    querySnapshot.forEach((doc) => {
+      registrations.push({
+        id: doc.id,
+        ...doc.data()
+      } as EventRegistrationData & { id: string });
+    });
+    
+    return registrations;
+  } catch (error) {
+    console.error('Error getting registrations:', error);
+    throw new Error('Failed to fetch registrations');
+  }
+};

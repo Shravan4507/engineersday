@@ -23,6 +23,7 @@ export default function Navbar({
   onRegisterClick
 }: NavbarProps) {
   const [activeItem, setActiveItem] = useState("Home");
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -42,13 +43,36 @@ export default function Navbar({
       }
     };
 
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (isMobileMenuOpen && !target.closest('.mobile-menu') && !target.closest('.mobile-menu-button')) {
+        setIsMobileMenuOpen(false);
+      }
+    };
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && isMobileMenuOpen) {
+        setIsMobileMenuOpen(false);
+      }
+    };
+
     window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleEscape);
+    
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [isMobileMenuOpen]);
 
   const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string, label: string) => {
     e.preventDefault();
     setActiveItem(label);
+    
+    // Close mobile menu when item is clicked
+    setIsMobileMenuOpen(false);
     
     if (label === 'Register') {
       onRegisterClick?.();
@@ -70,6 +94,11 @@ export default function Navbar({
     e.preventDefault();
     window.location.reload();
   };
+
+  const toggleMobileMenu = () => {
+    setIsMobileMenuOpen(!isMobileMenuOpen);
+  };
+
   return (
     <nav className="navbar">
       <div className="navbar-container">
@@ -95,6 +124,38 @@ export default function Navbar({
             </a>
           ))}
           <ThemeToggle />
+        </div>
+
+        {/* Mobile Menu Button */}
+        <button 
+          className="mobile-menu-button"
+          onClick={toggleMobileMenu}
+          aria-label="Toggle mobile menu"
+        >
+          <span className={`hamburger ${isMobileMenuOpen ? 'open' : ''}`}>
+            <span></span>
+            <span></span>
+            <span></span>
+          </span>
+        </button>
+      </div>
+
+      {/* Mobile Menu Overlay */}
+      <div className={`mobile-menu-overlay ${isMobileMenuOpen ? 'open' : ''}`}>
+        <div className="mobile-menu">
+          {menuItems.map((item, index) => (
+            <a
+              key={index}
+              href={item.href}
+              className={`mobile-menu-item ${activeItem === item.label ? 'active' : ''}`}
+              onClick={(e) => handleNavClick(e, item.href, item.label)}
+            >
+              {item.label}
+            </a>
+          ))}
+          <div className="mobile-theme-toggle">
+            <ThemeToggle />
+          </div>
         </div>
       </div>
     </nav>

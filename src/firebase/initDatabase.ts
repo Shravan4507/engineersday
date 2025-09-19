@@ -1,8 +1,9 @@
 import { collection, addDoc, getDocs } from 'firebase/firestore';
 import { db } from './config';
+import { type Event } from './eventService';
 
-// Initial events data
-const initialEvents = [
+// Static events data
+const staticEvents: Omit<Event, 'id'>[] = [
   {
     name: 'Code Cooking',
     description: 'Unleash your inner developer in this fast-paced coding challenge. Whether you\'re building an app, a game, or a quirky script—start fresh, think fast, and impress the judges.',
@@ -35,43 +36,26 @@ const initialEvents = [
   }
 ];
 
-export const initializeDatabase = async () => {
+// Initialize database with events
+export const initializeDatabase = async (): Promise<void> => {
   try {
-    console.log('Initializing Firestore database...');
+    const eventsRef = collection(db, 'events');
+    const snapshot = await getDocs(eventsRef);
     
-    // Check if events already exist
-    const eventsCollection = collection(db, 'events');
-    const eventsSnapshot = await getDocs(eventsCollection);
-    
-    if (eventsSnapshot.empty) {
-      console.log('No events found. Adding initial events...');
+    // Only add events if database is empty
+    if (snapshot.empty) {
+      console.log('Database is empty, adding initial events...');
       
-      // Add each event to Firestore
-      for (const event of initialEvents) {
-        const docRef = await addDoc(eventsCollection, event);
-        console.log(`Event "${event.name}" added with ID: ${docRef.id}`);
+      for (const event of staticEvents) {
+        await addDoc(eventsRef, event);
       }
       
-      console.log('Database initialized successfully!');
+      console.log('Initial events added successfully');
     } else {
-      console.log('Events already exist in database.');
+      console.log('Database already has events, skipping initialization');
     }
   } catch (error) {
     console.error('Error initializing database:', error);
     throw error;
   }
 };
-
-// Function to manually initialize database (call this in browser console)
-export const initDB = () => {
-  initializeDatabase().then(() => {
-    console.log('Database initialization complete!');
-  }).catch((error) => {
-    console.error('Database initialization failed:', error);
-  });
-};
-
-// Make it available globally for browser console
-if (typeof window !== 'undefined') {
-  (window as any).initDB = initDB;
-}

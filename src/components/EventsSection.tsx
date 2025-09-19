@@ -1,105 +1,187 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import './EventsSection.css';
 import codeCookingIcon from '../assets/code_cooking.png';
 import promptEngineeringIcon from '../assets/Prompt_Engineering.png';
 import technicalPosterIcon from '../assets/Technical_Poster.png';
-import EventRegistrationModal from './EventRegistrationModal';
-import { eventService, Event } from '../firebase/eventService';
+import { getEvents, type Event as FirebaseEvent } from '../firebase/eventService';
 import { initializeDatabase } from '../firebase/initDatabase';
-import { testFirestoreConnection, testEventResponse } from '../firebase/testConnection';
 
 interface EventsSectionProps {
   onRegisterClick?: (event: string) => void;
 }
 
-export default function EventsSection({ onRegisterClick }: EventsSectionProps) {
-  const [events, setEvents] = useState<Event[]>([]);
-  const [selectedEvent, setSelectedEvent] = useState<{ name: string; id: string } | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+// Event interface
+interface Event {
+  id: string;
+  name: string;
+  description: string;
+  date: string;
+  time: string;
+  location: string;
+  maxParticipants: number;
+  currentParticipants: number;
+  isActive: boolean;
+}
+
+// Static events data
+const staticEvents: Event[] = [
+  {
+    id: 'code-cooking',
+    name: 'Code Cooking',
+    description: 'Unleash your inner developer in this fast-paced coding challenge. Whether you\'re building an app, a game, or a quirky script—start fresh, think fast, and impress the judges.',
+    date: '2024-09-15',
+    time: '10:00 AM',
+    location: 'Computer Engineering Department, Zeal College',
+    maxParticipants: 50,
+    currentParticipants: 0,
+    isActive: true
+  },
+  {
+    id: 'prompt-engineering',
+    name: 'Prompt Engineering',
+    description: 'Dive into the art of prompt design and AI interaction. This non-technical event invites you to explore how language can drive intelligent outcomes—from creative storytelling to solving real-world problems.',
+    date: '2024-09-15',
+    time: '2:00 PM',
+    location: 'Computer Engineering Department, Zeal College',
+    maxParticipants: 30,
+    currentParticipants: 0,
+    isActive: true
+  },
+  {
+    id: 'technical-poster',
+    name: 'Technical Poster',
+    description: 'Showcase your perspective on cutting-edge tech topics through hand-crafted posters. No digital tools—just your ideas, your art, and your voice.',
+    date: '2024-09-15',
+    time: '4:00 PM',
+    location: 'Computer Engineering Department, Zeal College',
+    maxParticipants: 25,
+    currentParticipants: 0,
+    isActive: true
+  }
+];
+
+// Memoized Event Card Component
+const EventCard = React.memo(({ 
+  event, 
+  onRegisterClick, 
+  getEventIcon, 
+  getEventGradient, 
+  getEventDetails 
+}: {
+  event: FirebaseEvent;
+  onRegisterClick: (eventName: string) => void;
+  getEventIcon: (eventName: string) => string;
+  getEventGradient: (eventName: string) => string;
+  getEventDetails: (event: FirebaseEvent) => Array<{ icon: string; text: string }>;
+}) => {
+  const eventDetails = useMemo(() => getEventDetails(event), [event, getEventDetails]);
+  
+  return (
+    <div className="event-card">
+      {/* Card Header */}
+      <div className="event-header">
+        <div className="event-icon" style={{ background: getEventGradient(event.name) }}>
+          <img src={getEventIcon(event.name)} alt={event.name} className="event-icon-img" />
+        </div>
+        <div className="event-title-group">
+          <h3 className="event-title">{event.name}</h3>
+          <p className="event-subtitle">
+            {event.name === 'Code Cooking' && 'Cook Your Code, Serve Your Innovation'}
+            {event.name === 'Prompt Engineering' && 'Where Words Shape Worlds'}
+            {event.name === 'Technical Poster' && 'Design. Express. Inspire.'}
+          </p>
+        </div>
+      </div>
+
+      {/* Card Content */}
+      <div className="event-content">
+        <p className="event-description">{event.description}</p>
+        
+        {/* Themes (for Technical Poster) */}
+        {event.name === 'Technical Poster' && (
+          <div className="event-themes">
+            <h4 className="themes-title">Themes:</h4>
+            <ul className="themes-list">
+              <li className="theme-item">• Artificial Intelligence</li>
+              <li className="theme-item">• Cloud Computing</li>
+              <li className="theme-item">• Cybersecurity</li>
+            </ul>
+          </div>
+        )}
+
+        {/* Event Details */}
+        <div className="event-details">
+          {eventDetails.map((detail, index) => (
+            <div key={index} className="detail-item">
+              <span className="detail-icon">{detail.icon}</span>
+              <span className="detail-text">{detail.text}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Register Button */}
+      <button 
+        className="event-register-btn" 
+        onClick={() => onRegisterClick(event.name)}
+        disabled={!event.isActive || event.currentParticipants >= event.maxParticipants}
+      >
+        {!event.isActive ? 'Event Inactive' : 
+         event.currentParticipants >= event.maxParticipants ? 'Fully Booked' : 
+         'Register Now'}
+      </button>
+    </div>
+  );
+});
+
+EventCard.displayName = 'EventCard';
+
+function EventsSection({ onRegisterClick }: EventsSectionProps) {
+  const [events, setEvents] = useState<FirebaseEvent[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Static events data as fallback
-  const staticEvents = [
-    {
-      id: 'code-cooking',
-      name: 'Code Cooking',
-      description: 'Unleash your inner developer in this fast-paced coding challenge. Whether you\'re building an app, a game, or a quirky script—start fresh, think fast, and impress the judges.',
-      date: '2024-09-15',
-      time: '10:00 AM',
-      location: 'Computer Engineering Department, Zeal College',
-      maxParticipants: 50,
-      currentParticipants: 0,
-      isActive: true
-    },
-    {
-      id: 'prompt-engineering',
-      name: 'Prompt Engineering',
-      description: 'Dive into the art of prompt design and AI interaction. This non-technical event invites you to explore how language can drive intelligent outcomes—from creative storytelling to solving real-world problems.',
-      date: '2024-09-15',
-      time: '2:00 PM',
-      location: 'Computer Engineering Department, Zeal College',
-      maxParticipants: 30,
-      currentParticipants: 0,
-      isActive: true
-    },
-    {
-      id: 'technical-poster',
-      name: 'Technical Poster',
-      description: 'Showcase your perspective on cutting-edge tech topics through hand-crafted posters. No digital tools—just your ideas, your art, and your voice.',
-      date: '2024-09-15',
-      time: '4:00 PM',
-      location: 'Computer Engineering Department, Zeal College',
-      maxParticipants: 25,
-      currentParticipants: 0,
-      isActive: true
-    }
-  ];
-
-  useEffect(() => {
-    const loadEvents = async () => {
-      try {
-        // Test Firestore connection first
-        console.log('Testing Firestore connection...');
-        const connectionTest = await testFirestoreConnection();
-        
-        if (!connectionTest.success) {
-          console.error('Firestore connection failed:', connectionTest.error);
-          // Still try to load events, but show error
-        }
-        
-        // Initialize database first
-        await initializeDatabase();
-        
-        // Load events from Firebase
-        const firebaseEvents = await eventService.getEvents();
-        if (firebaseEvents.length > 0) {
-          setEvents(firebaseEvents);
-        } else {
-          // Use static events if no Firebase events
-          setEvents(staticEvents);
-        }
-      } catch (error) {
-        console.error('Error loading events:', error);
+  const loadEvents = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // Initialize database first
+      await initializeDatabase();
+      
+      // Load events from Firebase
+      const firebaseEvents = await getEvents();
+      if (firebaseEvents.length > 0) {
+        setEvents(firebaseEvents);
+        setError(null);
+        console.log(`Loaded ${firebaseEvents.length} events from Firebase`);
+      } else {
         // Fallback to static events
         setEvents(staticEvents);
-      } finally {
-        setLoading(false);
+        setError('No events found in database, using default events');
       }
-    };
-
-    loadEvents();
+    } catch (error) {
+      console.error('Error loading events:', error);
+      setEvents(staticEvents);
+      setError('Failed to load events from server, using offline mode');
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  const handleRegisterClick = (eventName: string) => {
-    const event = events.find(e => e.name === eventName);
-    if (event) {
-      setSelectedEvent({ name: event.name, id: event.id });
-      setIsModalOpen(true);
-    }
-    onRegisterClick?.(eventName);
+  const handleRetry = () => {
+    loadEvents();
   };
 
-  const getEventIcon = (eventName: string) => {
+  useEffect(() => {
+    loadEvents();
+  }, [loadEvents]);
+
+  const handleRegisterClick = useCallback((eventName: string) => {
+    onRegisterClick?.(eventName);
+  }, [onRegisterClick]);
+
+  const getEventIcon = useCallback((eventName: string) => {
     switch (eventName) {
       case 'Code Cooking':
         return codeCookingIcon;
@@ -110,9 +192,9 @@ export default function EventsSection({ onRegisterClick }: EventsSectionProps) {
       default:
         return codeCookingIcon;
     }
-  };
+  }, []);
 
-  const getEventGradient = (eventName: string) => {
+  const getEventGradient = useCallback((eventName: string) => {
     switch (eventName) {
       case 'Code Cooking':
         return 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
@@ -123,9 +205,9 @@ export default function EventsSection({ onRegisterClick }: EventsSectionProps) {
       default:
         return 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
     }
-  };
+  }, []);
 
-  const getEventDetails = (event: Event) => {
+  const getEventDetails = useCallback((event: FirebaseEvent) => {
     const baseDetails = [
       { icon: '📅', text: `Date: ${event.date}` },
       { icon: '⏰', text: `Time: ${event.time}` },
@@ -157,7 +239,7 @@ export default function EventsSection({ onRegisterClick }: EventsSectionProps) {
     }
 
     return baseDetails;
-  };
+  }, []);
 
   if (loading) {
     return (
@@ -166,6 +248,10 @@ export default function EventsSection({ onRegisterClick }: EventsSectionProps) {
           <div className="events-header">
             <h2 className="events-title">Featured Events</h2>
             <p className="events-subtitle">Loading events...</p>
+          </div>
+          <div className="loading-container">
+            <div className="loading-spinner"></div>
+            <p>Fetching the latest events...</p>
           </div>
         </div>
       </section>
@@ -182,82 +268,41 @@ export default function EventsSection({ onRegisterClick }: EventsSectionProps) {
             <p className="events-subtitle">
               Three exciting challenges designed to showcase your engineering prowess.
             </p>
+            {error && (
+              <div className="events-error-banner">
+                <div className="error-content">
+                  <span className="error-icon">⚠️</span>
+                  <span className="error-message">{error}</span>
+                  <button 
+                    className="retry-button" 
+                    onClick={handleRetry}
+                    disabled={loading}
+                  >
+                    {loading ? 'Retrying...' : 'Retry'}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Events Grid */}
           <div className="events-grid">
             {events.map((event) => (
-              <div key={event.id} className="event-card">
-                {/* Card Header */}
-                <div className="event-header">
-                  <div className="event-icon" style={{ background: getEventGradient(event.name) }}>
-                    <img src={getEventIcon(event.name)} alt={event.name} className="event-icon-img" />
-                  </div>
-                  <div className="event-title-group">
-                    <h3 className="event-title">{event.name}</h3>
-                    <p className="event-subtitle">
-                      {event.name === 'Code Cooking' && 'Cook Your Code, Serve Your Innovation'}
-                      {event.name === 'Prompt Engineering' && 'Where Words Shape Worlds'}
-                      {event.name === 'Technical Poster' && 'Design. Express. Inspire.'}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Card Content */}
-                <div className="event-content">
-                  <p className="event-description">{event.description}</p>
-                  
-                  {/* Themes (for Technical Poster) */}
-                  {event.name === 'Technical Poster' && (
-                    <div className="event-themes">
-                      <h4 className="themes-title">Themes:</h4>
-                      <ul className="themes-list">
-                        <li className="theme-item">• Artificial Intelligence</li>
-                        <li className="theme-item">• Cloud Computing</li>
-                        <li className="theme-item">• Cybersecurity</li>
-                      </ul>
-                    </div>
-                  )}
-
-                  {/* Event Details */}
-                  <div className="event-details">
-                    {getEventDetails(event).map((detail, index) => (
-                      <div key={index} className="detail-item">
-                        <span className="detail-icon">{detail.icon}</span>
-                        <span className="detail-text">{detail.text}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Register Button */}
-                <button 
-                  className="event-register-btn" 
-                  onClick={() => handleRegisterClick(event.name)}
-                  disabled={!event.isActive || event.currentParticipants >= event.maxParticipants}
-                >
-                  {!event.isActive ? 'Event Inactive' : 
-                   event.currentParticipants >= event.maxParticipants ? 'Fully Booked' : 
-                   'Register Now'}
-                </button>
-              </div>
+              <EventCard
+                key={event.id}
+                event={event}
+                onRegisterClick={handleRegisterClick}
+                getEventIcon={getEventIcon}
+                getEventGradient={getEventGradient}
+                getEventDetails={getEventDetails}
+              />
             ))}
           </div>
         </div>
       </section>
 
-      {/* Registration Modal */}
-      {selectedEvent && (
-        <EventRegistrationModal
-          isOpen={isModalOpen}
-          onClose={() => {
-            setIsModalOpen(false);
-            setSelectedEvent(null);
-          }}
-          eventName={selectedEvent.name}
-          eventId={selectedEvent.id}
-        />
-      )}
     </>
   );
 }
+
+export default React.memo(EventsSection);
