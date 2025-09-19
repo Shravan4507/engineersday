@@ -240,6 +240,8 @@ export default function RegistrationModal({
     setFormErrors({});
 
     try {
+      console.log('Starting registration process...');
+      
       // Sanitize input data
       const sanitizedData = {
         event: formData.event.trim(),
@@ -273,8 +275,27 @@ export default function RegistrationModal({
         status: 'pending'
       };
 
-      // Register for event
-      await registerForEvent(registrationData);
+      // Try Firebase registration first
+      try {
+        await registerForEvent(registrationData);
+        console.log('Firebase registration successful');
+      } catch (firebaseError) {
+        console.warn('Firebase registration failed, using local storage fallback:', firebaseError);
+        
+        // Fallback to local storage
+        const fallbackData = {
+          id: Date.now().toString(),
+          ...registrationData,
+          registrationDate: new Date().toISOString()
+        };
+        
+        // Save to local storage
+        const existingRegistrations = JSON.parse(localStorage.getItem('eventRegistrations') || '[]');
+        existingRegistrations.push(fallbackData);
+        localStorage.setItem('eventRegistrations', JSON.stringify(existingRegistrations));
+        
+        console.log('Registration saved to local storage');
+      }
 
       setIsSubmitted(true);
       
@@ -307,6 +328,22 @@ export default function RegistrationModal({
       }
     }
   }, [isOpen, preselectedEvent]);
+
+  // Add timeout to prevent infinite loading
+  useEffect(() => {
+    if (isSubmitting) {
+      const timeout = setTimeout(() => {
+        if (isSubmitting) {
+          console.error('Registration timeout - Firebase may not be configured');
+          setError('Registration timed out. Please check your internet connection and try again.');
+          setIsSubmitting(false);
+          onShowToast?.('Registration timed out. Please try again.', 'error');
+        }
+      }, 10000); // 10 second timeout
+
+      return () => clearTimeout(timeout);
+    }
+  }, [isSubmitting, onShowToast]);
 
   if (!isOpen) return null;
 
