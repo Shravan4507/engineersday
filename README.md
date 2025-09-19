@@ -6,6 +6,8 @@ A modern, interactive web application built for Engineers' Day 2025 celebration 
 
 🌐 **Live Demo**: [https://shravan4507.github.io/engineersday/](https://shravan4507.github.io/engineersday/)
 
+*Last updated: September 19, 2025 - Dynamic registration system with Firebase integration*
+
 ## ✨ Features
 
 ### 🎯 **Three Featured Events**
