@@ -1,0 +1,268 @@
+.countdown-section {
+  padding: 80px 20px;
+  position: relative;
+  z-index: 5;
+  background: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.1) 100%);
+}
+
+.countdown-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 80px;
+  align-items: center;
+}
+
+.event-details {
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.event-date {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: 0 4px 20px rgba(102, 126, 234, 0.3);
+  transition: color 0.3s ease;
+}
+
+.event-location {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  line-height: 1.4;
+  max-width: 800px;
+  transition: color 0.3s ease;
+}
+
+.registration-deadline {
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  transition: color 0.3s ease;
+}
+
+.registration-deadline.closed {
+  color: #ff6b6b;
+  font-weight: 600;
+}
+
+.event-live-status {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  text-align: center;
+}
+
+.live-indicator {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #00ff88;
+  text-shadow: 0 0 20px rgba(0, 255, 136, 0.5);
+}
+
+.live-dot {
+  width: 12px;
+  height: 12px;
+  background: #00ff88;
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+  box-shadow: 0 0 20px rgba(0, 255, 136, 0.8);
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.live-message {
+  font-size: 1.2rem;
+  color: var(--text-secondary);
+  max-width: 500px;
+  line-height: 1.5;
+}
+
+.countdown-timer {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: nowrap;
+}
+
+.countdown-item {
+  background: var(--card-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--border-color);
+  border-radius: 24px;
+  padding: 20px 16px;
+  text-align: center;
+  min-width: 80px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.countdown-item:hover {
+  transform: scale(1.1);
+  border-color: var(--border-color);
+  background: var(--card-hover);
+}
+
+.countdown-number {
+  font-size: 3.5rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: 0 4px 20px rgba(102, 126, 234, 0.3);
+  position: relative;
+  z-index: 1;
+  transition: color 0.3s ease;
+}
+
+.countdown-label {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  position: relative;
+  z-index: 1;
+  transition: color 0.3s ease;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .countdown-section {
+    padding: 60px 20px;
+  }
+  
+  .countdown-container {
+    grid-template-columns: 1fr;
+    gap: 40px;
+    text-align: center;
+  }
+  
+  .event-details {
+    text-align: center;
+  }
+  
+  .event-date {
+    font-size: 1.5rem;
+  }
+  
+  .event-location {
+    font-size: 1.1rem;
+  }
+  
+  .registration-deadline {
+    font-size: 1rem;
+  }
+  
+  .countdown-timer {
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  
+  .countdown-item {
+    min-width: 70px;
+    padding: 16px 12px;
+  }
+  
+  .countdown-number {
+    font-size: 2.5rem;
+  }
+  
+  .countdown-label {
+    font-size: 0.9rem;
+  }
+  
+  .live-indicator {
+    font-size: 1.2rem;
+  }
+  
+  .live-message {
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .countdown-section {
+    padding: 40px 16px;
+  }
+  
+  .countdown-container {
+    grid-template-columns: 1fr;
+    gap: 30px;
+    text-align: center;
+  }
+  
+  .event-details {
+    text-align: center;
+  }
+  
+  .event-date {
+    font-size: 1.3rem;
+  }
+  
+  .event-location {
+    font-size: 1rem;
+  }
+  
+  .registration-deadline {
+    font-size: 0.9rem;
+  }
+  
+  .countdown-timer {
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  
+  .countdown-item {
+    min-width: 60px;
+    padding: 12px 8px;
+  }
+  
+  .countdown-number {
+    font-size: 2rem;
+  }
+  
+  .countdown-label {
+    font-size: 0.8rem;
+  }
+  
+  .live-indicator {
+    font-size: 1rem;
+  }
+  
+  .live-message {
+    font-size: 0.9rem;
+  }
+}
