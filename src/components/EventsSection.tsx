@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import './EventsSection.css';
 import codeCookingIcon from '../assets/code_cooking.png';
 import promptEngineeringIcon from '../assets/Prompt_Engineering.png';
 import technicalPosterIcon from '../assets/Technical_Poster.png';
-import { getEvents, type Event as FirebaseEvent } from '../firebase/eventService';
-import { initializeDatabase } from '../firebase/initDatabase';
+// Firebase imports removed for immediate static display
+// import { getEvents, type Event as FirebaseEvent } from '../firebase/eventService';
+// import { initializeDatabase } from '../firebase/initDatabase';
 
 interface EventsSectionProps {
   onRegisterClick?: (event: string) => void;
@@ -137,48 +138,23 @@ const EventCard = React.memo(({
 EventCard.displayName = 'EventCard';
 
 function EventsSection({ onRegisterClick }: EventsSectionProps) {
-  const [events, setEvents] = useState<FirebaseEvent[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [events, setEvents] = useState<Event[]>(staticEvents);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const loadEvents = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      // Use static events immediately for better user experience
-      setEvents(staticEvents);
-      setError(null);
-      console.log(`Using static events for immediate display`);
-      
-      // Try to load from Firebase in background (optional)
-      try {
-        await initializeDatabase();
-        const firebaseEvents = await getEvents();
-        if (firebaseEvents.length > 0) {
-          setEvents(firebaseEvents);
-          setError(null);
-          console.log(`Updated with ${firebaseEvents.length} events from Firebase`);
-        }
-      } catch (firebaseError) {
-        console.log('Firebase events not available, using static events');
-      }
-    } catch (error) {
-      console.error('Error loading events:', error);
-      setEvents(staticEvents);
-      setError('Using offline mode');
-    } finally {
-      setLoading(false);
-    }
+    // Use static events immediately - no loading needed
+    setEvents(staticEvents);
+    setLoading(false);
+    setError(null);
+    console.log(`Using static events for immediate display`);
   }, []);
 
   const handleRetry = () => {
     loadEvents();
   };
 
-  useEffect(() => {
-    loadEvents();
-  }, [loadEvents]);
+  // No useEffect needed - events are loaded immediately
 
   const handleRegisterClick = useCallback((eventName: string) => {
     onRegisterClick?.(eventName);
