@@ -3,10 +3,10 @@
 
 export const EVENT_CONFIG = {
   // Event date - when the actual event happens
-  eventDate: '2025-09-29T00:00:00Z', // September 29, 2025 UTC
+  eventDate: '2025-09-21T00:00:00Z', // September 29, 2025 UTC
   
   // Registration deadline - when registration closes
-  registrationDeadline: '2025-09-28T23:59:59Z', // September 28, 2025 UTC
+  registrationDeadline: '2025-09-20T23:59:59Z', // September 28, 2025 UTC
   
   // Event details
   eventName: "Engineers' Day 2025",
@@ -47,4 +47,13 @@ export const getDaysUntilDeadline = () => {
   const diffTime = deadline.getTime() - now.getTime();
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   return diffDays;
+};
+
+// Get days remaining until event date
+export const getDaysUntilEvent = () => {
+  const now = new Date();
+  const eventDate = getEventDate();
+  const diffTime = eventDate.getTime() - now.getTime();
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  return Math.max(0, diffDays); // Never return negative days
 };

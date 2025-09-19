@@ -1,16 +1,35 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import './FooterSection.css';
+import { isRegistrationOpen } from '../config/eventConfig';
 
 interface FooterSectionProps {
   onRegisterClick?: () => void;
 }
 
 export default function FooterSection({ onRegisterClick }: FooterSectionProps) {
+  const [isRegistrationOpenState, setIsRegistrationOpenState] = useState(true);
+
+  useEffect(() => {
+    const updateRegistrationStatus = () => {
+      setIsRegistrationOpenState(isRegistrationOpen());
+    };
+
+    // Update immediately
+    updateRegistrationStatus();
+
+    // Update every minute
+    const interval = setInterval(updateRegistrationStatus, 60000);
+
+    return () => clearInterval(interval);
+  }, []);
+
   const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
     e.preventDefault();
     
     if (href === '#register') {
-      onRegisterClick?.();
+      if (isRegistrationOpenState) {
+        onRegisterClick?.();
+      }
       return;
     }
     
@@ -81,8 +100,13 @@ export default function FooterSection({ onRegisterClick }: FooterSectionProps) {
             <li>
               <a 
                 href="#register" 
-                className="footer-link"
+                className={`footer-link ${!isRegistrationOpenState ? 'disabled' : ''}`}
                 onClick={(e) => handleLinkClick(e, '#register')}
+                style={!isRegistrationOpenState ? { 
+                  opacity: 0.6, 
+                  cursor: 'not-allowed',
+                  pointerEvents: 'none'
+                } : {}}
               >
                 <span className="link-icon">▶</span>
                 Register

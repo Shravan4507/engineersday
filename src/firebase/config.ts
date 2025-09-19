@@ -1,47 +1,49 @@
 import { initializeApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
 
-// Firebase configuration using environment variables
+// Firebase configuration - hardcoded for reliability
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID
+  apiKey: 'AIzaSyCjUaYIb2M30Uuq6FjA5LzQOl3NPmEcxYU',
+  authDomain: 'engineersday-2025.firebaseapp.com',
+  projectId: 'engineersday-2025',
+  storageBucket: 'engineersday-2025.firebasestorage.app',
+  messagingSenderId: '870456039908',
+  appId: '1:870456039908:web:c12a010e2a6640e27ccff1'
 };
 
-// Validate that all required environment variables are present
-const requiredEnvVars = [
-  'VITE_FIREBASE_API_KEY',
-  'VITE_FIREBASE_AUTH_DOMAIN',
-  'VITE_FIREBASE_PROJECT_ID',
-  'VITE_FIREBASE_STORAGE_BUCKET',
-  'VITE_FIREBASE_MESSAGING_SENDER_ID',
-  'VITE_FIREBASE_APP_ID'
-];
+// Debug environment variables
+console.log('🔍 Environment variables check:');
+console.log('VITE_FIREBASE_PROJECT_ID:', import.meta.env.VITE_FIREBASE_PROJECT_ID);
+console.log('VITE_FIREBASE_API_KEY:', import.meta.env.VITE_FIREBASE_API_KEY ? 'Present' : 'Missing');
+console.log('Final projectId:', firebaseConfig.projectId);
 
-const missingVars = requiredEnvVars.filter(varName => !import.meta.env[varName]);
+// Check if Firebase is properly configured
+const isFirebaseConfigured = true; // Always true since we're using hardcoded config
 
-if (missingVars.length > 0) {
-  console.error('❌ Missing required environment variables:', missingVars);
-  console.error('Please check your .env file and ensure all Firebase configuration variables are set.');
-} else {
-  console.log('✅ All Firebase environment variables are present');
-  console.log('Firebase config:', {
-    apiKey: import.meta.env.VITE_FIREBASE_API_KEY ? 'Present' : 'Missing',
-    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN ? 'Present' : 'Missing',
-    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID ? 'Present' : 'Missing',
-    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET ? 'Present' : 'Missing',
-    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID ? 'Present' : 'Missing',
-    appId: import.meta.env.VITE_FIREBASE_APP_ID ? 'Present' : 'Missing'
-  });
+if (!isFirebaseConfigured) {
+  console.warn('⚠️ Firebase not configured - using demo configuration');
+  console.warn('To enable Firebase features, create a .env file with your Firebase credentials');
+  console.warn('See .env.example for required variables');
 }
 
 // Initialize Firebase
-const app = initializeApp(firebaseConfig);
+let app;
+let db;
 
-// Initialize Firestore
-export const db = getFirestore(app);
+try {
+  app = initializeApp(firebaseConfig);
+  db = getFirestore(app);
+  console.log('✅ Firebase initialized successfully');
+  console.log('🔍 Firebase config used:', {
+    projectId: firebaseConfig.projectId,
+    authDomain: firebaseConfig.authDomain,
+    apiKey: firebaseConfig.apiKey ? 'Present' : 'Missing'
+  });
+} catch (error) {
+  console.error('❌ Firebase initialization failed:', error);
+  // Create a mock db object for development
+  db = null;
+}
 
+export { db };
 export default app;

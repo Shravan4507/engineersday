@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import './Navbar.css';
 import logoGif from '../assets/logo.webp';
 import ThemeToggle from './ThemeToggle';
+import { isRegistrationOpen } from '../config/eventConfig';
 
 interface NavbarProps {
   brandName?: string;
@@ -24,8 +25,19 @@ export default function Navbar({
 }: NavbarProps) {
   const [activeItem, setActiveItem] = useState("Home");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isRegistrationOpenState, setIsRegistrationOpenState] = useState(true);
 
   useEffect(() => {
+    const updateRegistrationStatus = () => {
+      setIsRegistrationOpenState(isRegistrationOpen());
+    };
+
+    // Update immediately
+    updateRegistrationStatus();
+
+    // Update every minute
+    const interval = setInterval(updateRegistrationStatus, 60000);
+
     const handleScroll = () => {
       const sections = ['home', 'events', 'prizes', 'register'];
       const scrollPosition = window.scrollY + 100; // Offset for better detection
@@ -61,6 +73,7 @@ export default function Navbar({
     document.addEventListener('keydown', handleEscape);
     
     return () => {
+      clearInterval(interval);
       window.removeEventListener('scroll', handleScroll);
       document.removeEventListener('mousedown', handleClickOutside);
       document.removeEventListener('keydown', handleEscape);
@@ -69,6 +82,12 @@ export default function Navbar({
 
   const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string, label: string) => {
     e.preventDefault();
+    
+    // If Register is clicked and registration is closed, don't do anything
+    if (label === 'Register' && !isRegistrationOpenState) {
+      return;
+    }
+    
     setActiveItem(label);
     
     // Close mobile menu when item is clicked
@@ -117,8 +136,12 @@ export default function Navbar({
             <a
               key={index}
               href={item.href}
-              className={`menu-item ${activeItem === item.label ? 'active' : ''}`}
+              className={`menu-item ${activeItem === item.label ? 'active' : ''} ${item.label === 'Register' && !isRegistrationOpenState ? 'disabled' : ''}`}
               onClick={(e) => handleNavClick(e, item.href, item.label)}
+              style={item.label === 'Register' && !isRegistrationOpenState ? { 
+                opacity: 0.6, 
+                cursor: 'not-allowed'
+              } : {}}
             >
               {item.label}
             </a>
@@ -147,8 +170,12 @@ export default function Navbar({
             <a
               key={index}
               href={item.href}
-              className={`mobile-menu-item ${activeItem === item.label ? 'active' : ''}`}
+              className={`mobile-menu-item ${activeItem === item.label ? 'active' : ''} ${item.label === 'Register' && !isRegistrationOpenState ? 'disabled' : ''}`}
               onClick={(e) => handleNavClick(e, item.href, item.label)}
+              style={item.label === 'Register' && !isRegistrationOpenState ? { 
+                opacity: 0.6, 
+                cursor: 'not-allowed'
+              } : {}}
             >
               {item.label}
             </a>

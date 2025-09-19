@@ -18,6 +18,7 @@ function AppContent() {
     isVisible: false
   });
 
+
   const openModal = (event?: string) => {
     setPreselectedEvent(event);
     setIsModalOpen(true);

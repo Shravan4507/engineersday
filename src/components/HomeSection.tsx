@@ -1,18 +1,18 @@
 import './HomeSection.css';
 import { useState, useEffect } from 'react';
-import { getDaysUntilDeadline, isRegistrationOpen } from '../config/eventConfig';
+import { getDaysUntilEvent, isRegistrationOpen } from '../config/eventConfig';
 
 interface HomeSectionProps {
   onRegisterClick?: () => void;
 }
 
 export default function HomeSection({ onRegisterClick }: HomeSectionProps) {
-  const [daysUntilDeadline, setDaysUntilDeadline] = useState(0);
+  const [daysUntilEvent, setDaysUntilEvent] = useState(0);
   const [isRegistrationOpenState, setIsRegistrationOpenState] = useState(true);
 
   useEffect(() => {
     const updateStats = () => {
-      setDaysUntilDeadline(getDaysUntilDeadline());
+      setDaysUntilEvent(getDaysUntilEvent());
       setIsRegistrationOpenState(isRegistrationOpen());
     };
 
@@ -45,7 +45,15 @@ export default function HomeSection({ onRegisterClick }: HomeSectionProps) {
           
           {/* Action Buttons */}
           <div className="action-buttons">
-            <button className="btn-primary" onClick={onRegisterClick}>
+            <button 
+              className="btn-primary" 
+              onClick={isRegistrationOpenState ? onRegisterClick : undefined}
+              disabled={!isRegistrationOpenState}
+              style={{ 
+                opacity: isRegistrationOpenState ? 1 : 0.6,
+                cursor: isRegistrationOpenState ? 'pointer' : 'not-allowed'
+              }}
+            >
               Register Now
             </button>
             <button 
@@ -71,10 +79,10 @@ export default function HomeSection({ onRegisterClick }: HomeSectionProps) {
           
           <div className="stat-card">
             <div className="stat-number">
-              {daysUntilDeadline > 0 ? daysUntilDeadline : 0}
+              {daysUntilEvent}
             </div>
             <div className="stat-label">
-              {daysUntilDeadline > 0 ? 'Days Left' : 'Registration\nClosed'}
+              Days Left
             </div>
           </div>
           

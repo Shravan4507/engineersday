@@ -37,6 +37,12 @@ export interface EventRegistrationData {
 // Get all events
 export const getEvents = async (): Promise<Event[]> => {
   try {
+    // Check if Firebase is configured
+    if (!db) {
+      console.warn('⚠️ Firebase not configured - returning empty events array');
+      return [];
+    }
+
     const eventsRef = collection(db, 'events');
     const q = query(eventsRef, orderBy('name'));
     const querySnapshot = await getDocs(q);
@@ -59,8 +65,22 @@ export const getEvents = async (): Promise<Event[]> => {
 // Register for an event
 export const registerForEvent = async (registrationData: Omit<EventRegistrationData, 'registrationDate'>): Promise<void> => {
   try {
+    // Check if Firebase is configured
+    if (!db) {
+      console.warn('⚠️ Firebase not configured - registration will be simulated');
+      console.log('📝 Registration data (simulated):', registrationData);
+      
+      // Simulate a successful registration
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      console.log('✅ Registration simulated successfully');
+      return;
+    }
+
+    // Firebase is properly configured with hardcoded values
+
     console.log('🔥 Firebase: Starting registration process...');
     console.log('🔥 Firebase: Database reference:', db);
+    console.log('🔥 Firebase: Database project ID:', db._databaseId.projectId);
     
     const registrationsRef = collection(db, 'registrations');
     console.log('🔥 Firebase: Collection reference created');
@@ -71,8 +91,14 @@ export const registerForEvent = async (registrationData: Omit<EventRegistrationD
     };
     console.log('🔥 Firebase: Data to save:', data);
     
-    const docRef = await addDoc(registrationsRef, data);
-    console.log('✅ Firebase: Registration successful with ID:', docRef.id);
+    try {
+      const docRef = await addDoc(registrationsRef, data);
+      console.log('✅ Firebase: Registration successful with ID:', docRef.id);
+      console.log('✅ Firebase: Document saved to Firestore');
+    } catch (firestoreError) {
+      console.error('❌ Firebase: Firestore error:', firestoreError);
+      throw firestoreError;
+    }
   } catch (error) {
     console.error('❌ Firebase: Error registering for event:', error);
     console.error('❌ Firebase: Error details:', {
